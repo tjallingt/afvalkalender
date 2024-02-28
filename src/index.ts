@@ -6,11 +6,7 @@ import { ICalEvent, createICal } from './ical';
 // - https://github.com/xirixiz/homeassistant-afvalwijzer
 // - https://github.com/Timendus/afvalkalender
 
-export interface Env {
-	POST_CODE: string;
-	HOUSE_NUMBER: string;
-	HOUSE_LETTER: string;
-}
+export interface Env {}
 
 const DESCRIPTIONS = {
 	BRANCHES: 'Takken',
@@ -31,7 +27,21 @@ const DESCRIPTIONS = {
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		let addresses = await fetchAddresses(env.POST_CODE, env.HOUSE_NUMBER, env.HOUSE_LETTER);
+		const { searchParams } = new URL(request.url);
+
+		let postCode = searchParams.get('postCode');
+		if (postCode == null) {
+			throw new Error('missing url query parameter `postCode`');
+		}
+
+		let houseNumber = searchParams.get('houseNumber');
+		if (houseNumber == null) {
+			throw new Error('missing url query parameter `postCode`');
+		}
+
+		let houseLetter = searchParams.get('houseLetter') ?? ' ';
+
+		let addresses = await fetchAddresses(postCode, houseNumber, houseLetter);
 
 		if (addresses.length != 1) {
 			console.log(addresses);
