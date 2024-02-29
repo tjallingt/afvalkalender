@@ -31,21 +31,32 @@ export default {
 
 		let postCode = searchParams.get('postCode');
 		if (postCode == null) {
-			throw new Error('missing url query parameter `postCode`');
+			return new Response('missing url query parameter `postCode`', {
+				status: 400,
+			});
 		}
 
 		let houseNumber = searchParams.get('houseNumber');
 		if (houseNumber == null) {
-			throw new Error('missing url query parameter `postCode`');
+			return new Response('missing url query parameter `houseNumber`', {
+				status: 400,
+			});
 		}
 
 		let houseLetter = searchParams.get('houseLetter') ?? ' ';
 
 		let addresses = await fetchAddresses(postCode, houseNumber, houseLetter);
 
-		if (addresses.length != 1) {
-			console.log(addresses);
-			throw new Error(`expected exactly one adress but got ${addresses.length}`);
+		if (addresses.length == 0) {
+			return new Response('did not find any address matching the `postCode`, `houseNumber` and `houseLetter`', {
+				status: 404,
+			});
+		}
+
+		if (addresses.length > 1) {
+			return new Response('found multiple addresses matching the `postCode`, `houseNumber` and `houseLetter`', {
+				status: 400,
+			});
 		}
 
 		let address = addresses[0];
