@@ -60,8 +60,14 @@ export default {
 		}
 
 		let address = addresses[0];
+		let now = new Date();
 
-		let pickups = await fetchPickups(address.UniqueId, new Date(), addYear(new Date(), 1));
+		// fetch pickup dates for the past week as well to prevent calendar events from disappearing too soon
+		let startDate = subtractDays(now, 7);
+		// fetch pickup dates for a whole year in advance
+		let endDate = addYears(now, 1);
+
+		let pickups = await fetchPickups(address.UniqueId, startDate, endDate);
 
 		let events = convertPickupsToICalEvents(pickups);
 
@@ -75,16 +81,20 @@ export default {
 	},
 };
 
-function addYear(date: Date, numYears: number): Date {
+function addYears(date: Date, numYears: number): Date {
 	let new_date = new Date(date.getTime());
 	new_date.setFullYear(new_date.getFullYear() + numYears);
 	return new_date;
 }
 
-function addDay(date: Date, numDays: number): Date {
+function addDays(date: Date, numDays: number): Date {
 	let new_date = new Date(date.getTime());
 	new_date.setDate(new_date.getDate() + numDays);
 	return new_date;
+}
+
+function subtractDays(date: Date, numDays: number): Date {
+	return addDays(date, -numDays);
 }
 
 function convertPickupsToICalEvents(pickups: Array<Pickup>): Array<ICalEvent> {
@@ -102,7 +112,7 @@ function convertPickupsToICalEvents(pickups: Array<Pickup>): Array<ICalEvent> {
 				uid: id,
 				creationDate: pickupDate,
 				startDate: pickupDate,
-				endDate: addDay(pickupDate, 1),
+				endDate: addDays(pickupDate, 1),
 				summary: description,
 			};
 
